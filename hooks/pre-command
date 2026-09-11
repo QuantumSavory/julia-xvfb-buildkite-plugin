@@ -2,6 +2,11 @@
 set -euo pipefail
 shopt -s extglob
 
+if [[ "$OSTYPE" != linux* ]]; then
+    echo "Skipping Xvfb setup on $OSTYPE."
+    return 0
+fi
+
 cat <<HEREDOC > /opt/julia
 #!/usr/bin/env bash
 pkill -9 Xvfb

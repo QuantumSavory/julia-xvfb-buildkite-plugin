@@ -2,6 +2,11 @@
 set -euo pipefail
 shopt -s extglob
 
+if [[ "$OSTYPE" != linux* ]]; then
+    echo "Skipping Xvfb diagnostics on $OSTYPE."
+    return 0
+fi
+
 echo "PATH is now $PATH"
 echo "The content of /opt/julia is"
 cat /opt/julia
