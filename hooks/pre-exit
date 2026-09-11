@@ -2,7 +2,13 @@
 set -euo pipefail
 shopt -s extglob
 
-echo "PATH is now $PATH"
-echo "The content of /opt/julia is"
-cat /opt/julia
-echo "which julia gives `which julia`"
+if [[ "$OSTYPE" != linux* ]]; then
+    echo "Skipping Xvfb diagnostics on $OSTYPE."
+    return 0
+fi
+
+if [[ -n "${JULIA_XVFB_WRAPPER_DIR:-}" ]]; then
+    rm -f -- "$JULIA_XVFB_WRAPPER_DIR/julia"
+    rmdir -- "$JULIA_XVFB_WRAPPER_DIR"
+    unset JULIA_XVFB_WRAPPER_DIR
+fi

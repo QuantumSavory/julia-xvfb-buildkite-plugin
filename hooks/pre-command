@@ -2,20 +2,28 @@
 set -euo pipefail
 shopt -s extglob
 
-cat <<HEREDOC > /opt/julia
+if [[ "$OSTYPE" != linux* ]]; then
+    echo "Skipping Xvfb setup on $OSTYPE."
+    return 0
+fi
+
+unset JULIA_XVFB_WRAPPER_DIR
+JULIA_XVFB_EXECUTABLE=$(command -v julia)
+JULIA_XVFB_WRAPPER_DIR=$(mktemp -d "${TMPDIR:-/tmp}/julia-xvfb.XXXXXX")
+export JULIA_XVFB_WRAPPER_DIR
+
+cat <<HEREDOC > "$JULIA_XVFB_WRAPPER_DIR/julia"
 #!/usr/bin/env bash
-pkill -9 Xvfb
-pkill -9 julia
-DISPLAY=:0 xvfb-run -e /dev/stdout -s '-screen 0 1024x768x24' `which julia` "\$@"
+exec xvfb-run -a -e /dev/stdout -s '-screen 0 1024x768x24' $(printf '%q' "$JULIA_XVFB_EXECUTABLE") "\$@"
 HEREDOC
 
-chmod +x /opt/julia
+chmod +x "$JULIA_XVFB_WRAPPER_DIR/julia"
 
-export PATH=/opt:"$PATH"
+export PATH="$JULIA_XVFB_WRAPPER_DIR:$PATH"
 
 echo "PATH is now $PATH"
-echo "The content of /opt/julia is"
-cat /opt/julia
-echo "which julia gives `which julia`"
+echo "The content of $JULIA_XVFB_WRAPPER_DIR/julia is"
+cat "$JULIA_XVFB_WRAPPER_DIR/julia"
+echo "command -v julia gives $(command -v julia)"
 echo "julia -e versioninfo()"
 julia -e "using InteractiveUtils; versioninfo()"
